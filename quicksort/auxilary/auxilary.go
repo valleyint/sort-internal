@@ -11,9 +11,10 @@ import (
 )
 
 type Options struct {
-	IsTest    *bool
-	IsProfile *bool
-	Cores     *int
+	IsTest      *bool
+	IsProfile   *bool
+	ProfileMode *string
+	Cores       *int
 }
 
 func InitMds() Options {
@@ -23,19 +24,22 @@ func InitMds() Options {
 	isProfiling := flag.Bool("p", false, "profiling on/off")
 	cores := flag.Int("c", c, "manual number of cores specification")
 	flag.Parse()
+
+	//isProfiling := *profileMode != "-1"
 	return Options{IsTest: isTesting, IsProfile: isProfiling, Cores: cores}
 }
 
 func RunProfile(member string) interface{ Stop() } {
 	//TODO :make it work with multiple options at once
-	if member == "CPU" {
-		x := prof.Start(prof.CPUProfile)
-		prof.ProfilePath("./prof")
-		return x
-	} else if member == "GO" {
-		x := prof.Start(prof.GoroutineProfile)
-		prof.ProfilePath("./prof")
-		return x
+	switch member {
+	case "CPU":
+		profiler := prof.Start(prof.CPUProfile)
+		prof.ProfilePath("./profile")
+		return profiler
+	case "BLOCK":
+		profiler := prof.Start(prof.BlockProfile, prof.CPUProfile, prof.ClockProfile)
+		prof.ProfilePath("./profile")
+		return profiler
 	}
 	return prof.Start()
 }

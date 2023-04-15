@@ -2,7 +2,10 @@ module quicksort
 
 go 1.18
 
-require github.com/pkg/profile v1.7.0
+require (
+	github.com/pkg/profile v1.7.0
+	go.uber.org/atomic v1.10.0
+)
 
 require (
 	github.com/felixge/fgprof v0.9.3 // indirect

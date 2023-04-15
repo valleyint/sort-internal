@@ -80,7 +80,7 @@ func partitionerThread(s *stack) {
 
 }
 
-func sort(arr []int) {
+func sort(arr []int, cores int) {
 	if len(arr) <= 1 {
 		return
 	}
@@ -88,8 +88,6 @@ func sort(arr []int) {
 	s := createStack()
 	waiter.Add(1)
 	*s <- arr
-
-	cores := 4
 
 	for loop := 0; loop < cores; loop++ {
 		go partitionerThread(s)
@@ -118,11 +116,6 @@ func init() {
 func main() {
 	//gnereate the array here into slice arr
 
-	var profr interface{ Stop() }
-	if *opts.IsProfile {
-		profr = aux.RunProfile("CPU")
-	}
-
 	var arr []int
 	if *opts.IsTest == false {
 		arr = aux.MakeArr(arrLen)
@@ -133,10 +126,15 @@ func main() {
 		*/
 	}
 
+	var profr interface{ Stop() }
+	if *opts.IsProfile {
+		profr = aux.RunProfile("BLOCK")
+	}
+
 	println("made")
 
 	startTm := time.Now()
-	sort(arr)
+	sort(arr, *opts.Cores)
 	endTm := time.Now()
 
 	tmTaken := endTm.Sub(startTm)
