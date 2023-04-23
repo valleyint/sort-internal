@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"math/rand"
+	"time"
 
 	prof "github.com/pkg/profile"
 
@@ -17,7 +18,7 @@ func init() {
 }
 
 const (
-	arrLen = 1e6
+	arrLen = 1e8
 )
 
 var (
@@ -79,13 +80,14 @@ func makeArr(length int) []int {
 func main() {
 	//gnereate the array hesre into slice arr
 
-	profr := runProfile("CPU")
+	// profr := runProfile("CPU")
 	var arr []int
 	if *isTesting == false {
 		arr = makeArr(arrLen)
 	} else {
 		arr = []int{3, 7, 2, 6, 3, 6, 4}
 	}
+	fmt.Println("made")
 
 	//arr := []int{3, 7, 2, 6, 3, 6, 4}
 	//q := 0
@@ -105,11 +107,16 @@ func main() {
 
 	// swap(arr, q, len(arr)-1)
 	// fmt.Println(arr)
+	startTm := time.Now()
 	sort(arr)
+	endTm := time.Now()
+
+	tmTaken := endTm.Sub(startTm)
+	fmt.Println(tmTaken)
 	if *isTesting == true {
 		fmt.Println(arr)
 	}
-	profr.Stop()
+	// profr.Stop()
 	//fmt.Println("end", arr)
 }
 

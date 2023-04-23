@@ -51,6 +51,7 @@ func MakeArr(length int, numSize ...int) []int {
 	} else {
 		sz = 1e6
 	}
+	rand.Seed(int64(rand.Intn(100)))
 	arr := make([]int, length)
 	for loop := 0; loop < length; loop++ {
 		arr[loop] = rand.Intn(sz)
@@ -66,12 +67,15 @@ func Readout(arr []int) {
 }
 
 func IsSorted(arr []int) bool {
+	isSorted := true
 	for loop := 1; loop < len(arr); loop++ {
 		if arr[loop] < arr[loop-1] {
-			//fmt.Println(arr[loop-1], arr[loop])
-			return false
+			if isSorted == true {
+				fmt.Println(arr[loop-1], arr[loop], loop)
+			}
+			isSorted = false
 		}
 
 	}
-	return true
+	return isSorted
 }

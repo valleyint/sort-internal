@@ -2,7 +2,9 @@ package main
 
 import (
 	aux "quicksort/auxilary"
+	"runtime"
 	"testing"
+	"time"
 )
 
 func Test_sort(t *testing.T) {
@@ -34,6 +36,18 @@ func Test_sort(t *testing.T) {
 	}
 }
 
-func BenchmarkSort (b *testing.B) {
-	aux.MakeArr()
+func BenchmarkSort(b *testing.B) {
+	aux.MakeArr(1e8)
+}
+
+func Test_sort_scaling(t *testing.T) {
+	num := runtime.NumCPU()
+
+	arr := aux.MakeArr(1e8)
+	results := make([]time.Duration, n)
+	for loop := 1; loop <= num; loop++ {
+		sort(arr, loop)
+	}
+
+	fmt.Println(results)
 }

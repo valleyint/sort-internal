@@ -10,17 +10,21 @@ import (
 	"time"
 
 	aux "quicksort/auxilary"
+
+	"go.uber.org/atomic"
 )
 
 const (
-	arrLen = 1e4
+	arrLen = 1e5
 )
 
 var (
-	opts    aux.Options
-	gotWork sync.WaitGroup
-	isFull  bool = false
-	done    sync.WaitGroup
+	opts aux.Options
+	//gotWork sync.WaitGroup
+	gotWork = atomic.NewInt32(0)
+	//changing to aatomc bool
+	//isFull = atomic.NewBool(false)
+	done sync.WaitGroup
 )
 
 type stack chan ([]int)
@@ -52,12 +56,27 @@ func partition(arr []int) ([]int, []int) {
 	return a, b
 }
 
-func sequentialSort(s *stack) {
+func sequentialSort(s *stack, arr []int) {
+	first := true
 	for {
-		if s.isEmpty() {
+		if len(arr) <= 1 {
 			return
 		}
-		a, b := partition(<-*s)
+
+		if len(*s) == 0 && first == false {
+			return
+
+		}
+
+		var a, b []int
+
+		if first == true {
+			first = false
+			a, b = partition(<-*s)
+		} else {
+			a, b = partition(arr)
+		}
+
 		if len(a) >= 1 {
 			*s <- a
 		}
@@ -69,59 +88,73 @@ func sequentialSort(s *stack) {
 }
 
 func partitionerThread(gs *stack) {
+	full := false
 	arr := <-*gs
-	gotWork.Done()
+	gotWork.Dec()
+	fmt.Println("gotwork", len(arr))
 	done.Add(1)
 	ls := createStack()
 
-	//for {
+	for {
 
-	if len(arr) <= 1 {
-		arr = <-*gs
+		if len(arr) <= 1 {
+			arr = <-*gs
+			if len(arr) == 0 {
+				return
+			}
+		}
+		//idk this ^ required
+
+		a, b := partition(arr)
+
+		if len(a) > 1 {
+			if full == false {
+				full = (gotWork.Load() == 0)
+			}
+
+			if full != true {
+				l := len(a)
+				fmt.Println(l)
+				*gs <- a
+			} else {
+				//*ls <- a
+				sequentialSort(ls, a)
+			}
+
+			//waiter.Add(1)
+		}
+		//gotWork.Wait()
+
+		if len(b) > 1 {
+			if full == false {
+				full = (gotWork.Load() == 0)
+			}
+
+			if full != true {
+				//fmt.Println("put", isFull)
+				*gs <- b
+			} else {
+				//*ls <- b
+				sequentialSort(ls, b)
+			}
+
+			//arr = b
+			//continue
+		}
+		//waiter.Done()
+
+		if len(*ls) != 0 {
+			arr = <-*ls
+		} else {
+			done.Done()
+			return
+		}
+
 		if len(arr) == 0 {
+			done.Done()
 			return
 		}
 	}
-	//idk this ^ required
-
-	a, b := partition(arr)
-
-	if len(a) > 1 {
-		if isFull != true {
-			*gs <- a
-		} else {
-			*ls <- a
-			sequentialSort(ls)
-		}
-
-		//waiter.Add(1)
-	}
-
-	if len(b) > 1 {
-		if isFull != true {
-			*gs <- b
-		} else {
-			*ls <- b
-			sequentialSort(ls)
-		}
-
-		//arr = b
-		//continue
-	}
-	//waiter.Done()
-
-	if len(*ls) != 0 {
-		arr = <-*ls
-	} else {
-		done.Done()
-		return
-	}
-
-	if len(arr) == 0 {
-		done.Done()
-		return
-	}
-	//}
 
 }
 
@@ -139,8 +172,9 @@ func sort(arr []int, cores int) {
 		go partitionerThread(s)
 	}
 
-	gotWork.Wait()
-	isFull = true
+	time.Sleep(100 * time.Millisecond)
+	//gotWork.Wait()
+	//isFull.Store(true)
 
 	// for {
 	// 	if s.isEmpty() {
@@ -216,7 +250,7 @@ func main() {
 	//go aux.Readout(arr)
 
 	startTm := time.Now()
-	sort(arr, 4)
+	sort(arr, 2)
 	endTm := time.Now()
 
 	tmTaken := endTm.Sub(startTm)
